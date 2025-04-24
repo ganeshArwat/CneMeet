@@ -1,64 +1,67 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import io from "socket.io-client";
+
 const socket = io("http://localhost:5000");
 
 function Room() {
-  const { roomId } = useParams();
+  const { id: roomId } = useParams();
   const location = useLocation();
-  const name = location.state?.name || "Guest";
-
+  const localVideoRef = useRef(null);
+  const hasInitialized = useRef(false);
   const [stream, setStream] = useState(null);
-  const [socket, setSocket] = useState(null);
 
-  const myVideoRef = useRef(null);
-
-  // Step 1: Get Media Stream
   useEffect(() => {
-    const startStream = async () => {
+    const getMedia = async () => {
       try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
+        const userStream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true,
         });
-
-        setStream(mediaStream); // Set stream in state
-
-        // Set the stream for the user's video element
-        if (myVideoRef.current) {
-          myVideoRef.current.srcObject = mediaStream;
+        setStream(userStream);
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = userStream;
         }
+        console.log("🎥 Media stream obtained");
       } catch (err) {
-        console.error("Error accessing media devices:", err);
+        console.error("❌ Error getting media", err);
       }
-
-      // Connect socket
-      const newSocket = io("http://localhost:5000"); // or your server URL
-      setSocket(newSocket);
-
-      return () => {
-        newSocket.disconnect();
-      };
     };
-    startStream();
+
+    getMedia();
   }, []);
 
   useEffect(() => {
-    if (socket && stream) {
-      socket.emit("join-room", { roomId, name });
-    }
-  }, [socket, stream, roomId, name]);
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
+    socket.on("connect", () => {
+      console.log("✅ Connected to socket server:", socket.id);
+      const userName = location.state?.name || "Anonymous";
+      socket.emit("join-room", { roomId, userName });
+      console.log(
+        `📨 Join room emitted for roomId: ${roomId} with userName: ${userName}`
+      );
+    });
+
+    socket.on("user-joined", ({ socketId, userName }) => {
+      console.log(`👤 ${userName} joined with socket ID: ${socketId}`);
+    });
+
+    // return () => {
+    //   socket.disconnect();
+    // };
+  }, [roomId, location.state?.name]);
 
   return (
-    <div>
-      <h1>Room: {roomId}</h1>
-      {/* User's video element */}
+    <div className="min-h-screen flex items-center justify-center flex-col bg-black text-white">
+      <h1 className="text-2xl font-bold mb-4">Room: {roomId}</h1>
       <video
-        ref={myVideoRef}
+        ref={localVideoRef}
         autoPlay
         muted
         playsInline
-        className="w-1/2 border-4 border-blue-500 rounded-xl shadow-lg"
+        className="rounded-md w-96 border-2 border-yellow-500"
       />
     </div>
   );
