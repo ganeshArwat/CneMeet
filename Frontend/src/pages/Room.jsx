@@ -1,121 +1,147 @@
-import { useEffect, useRef, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
-import io from "socket.io-client";
+import React, { useEffect, useCallback, useState } from "react";
+import ReactPlayer from "react-player";
+import peer from "../service/peer";
+import { useSocket } from "../providers/SocketProvider";
 
-// Connect to socket server
-const socket = io("http://localhost:5000");
+ReactPlayer;
+const RoomPage = () => {
+  const { socket } = useSocket();
+  const [remoteSocketId, setRemoteSocketId] = useState(null);
+  const [myStream, setMyStream] = useState();
+  const [remoteStream, setRemoteStream] = useState();
 
-function Room() {
-  const { roomId } = useParams();
-  const location = useLocation();
-  const localVideoRef = useRef(null);
-  const peerRef = useRef(null);
-  const [stream, setStream] = useState(null);
-
-  // Step 1: Get user media (video + audio)
-  useEffect(() => {
-    const getMedia = async () => {
-      try {
-        const userStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
-        setStream(userStream);
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = userStream;
-        }
-        console.log("🎥 Media stream obtained");
-      } catch (err) {
-        console.error("❌ Error getting media", err);
-      }
-    };
-
-    getMedia();
+  const handleUserJoined = useCallback(({ userName, id }) => {
+    console.log(`User ${userName} joined room`);
+    setRemoteSocketId(id);
   }, []);
 
-  // Step 2: Connect to socket server
-  useEffect(() => {
-    const setup = () => {
-      socket.on("connect", () => {
-        console.log("✅ Connected to socket server:", socket.id);
-      });
-    };
-
-    setup();
-  }, []);
-
-  // Step 3 & 4: Join room and handle user-joined only after stream is ready
-  useEffect(() => {
-    if (!stream) return;
-
-    const userName = location.state?.name || "Anonymous";
-    socket.emit("join-room", { roomId, userName });
-    console.log(
-      `📨 Join room emitted for roomId: ${roomId} with userName: ${userName}`
-    );
-
-    // Step 4.1: Handle new user joined
-    socket.on("user-joined", async ({ socketId: remoteSocketId, userName }) => {
-      console.log(`👤 ${userName} joined with socket ID: ${remoteSocketId}`);
-
-      // Step 4.2: Create peer connection
-      const peerConnection = new RTCPeerConnection({
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      });
-
-      peerRef.current = peerConnection;
-
-      // Step 4.3: Add local stream to peer
-      stream.getTracks().forEach((track) => {
-        peerConnection.addTrack(track, stream);
-      });
-
-      // Step 4.4: Handle ICE candidate and send to remote user
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit("ice-candidate", {
-            to: remoteSocketId,
-            candidate: event.candidate,
-          });
-        }
-      };
-
-      // Step 4.5: (Optional) Handle remote track
-      peerConnection.ontrack = (event) => {
-        console.log("📹 Received remote track:", event.streams);
-        // Attach `event.streams[0]` to remote video element if needed
-      };
-
-      // Step 4.6: Create and send offer
-      const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
-
-      socket.emit("offer", {
-        to: remoteSocketId,
-        offer,
-      });
-
-      console.log("📤 Sent offer to", remoteSocketId);
+  const handleCallUser = useCallback(async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
     });
+    const offer = await peer.getOffer();
+    socket.emit("user:call", { to: remoteSocketId, offer });
+    setMyStream(stream);
+  }, [remoteSocketId, socket]);
 
-    // Clean up socket events when unmounting
+  const handleIncommingCall = useCallback(
+    async ({ from, offer }) => {
+      setRemoteSocketId(from);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      setMyStream(stream);
+      console.log(`Incoming Call`, from, offer);
+      const ans = await peer.getAnswer(offer);
+      socket.emit("call:accepted", { to: from, ans });
+    },
+    [socket]
+  );
+
+  const sendStreams = useCallback(() => {
+    for (const track of myStream.getTracks()) {
+      peer.peer.addTrack(track, myStream);
+    }
+  }, [myStream]);
+
+  const handleCallAccepted = useCallback(
+    ({ from, ans }) => {
+      peer.setLocalDescription(ans);
+      console.log("Call Accepted!");
+      sendStreams();
+    },
+    [sendStreams]
+  );
+
+  const handleNegoNeeded = useCallback(async () => {
+    const offer = await peer.getOffer();
+    socket.emit("peer:nego:needed", { offer, to: remoteSocketId });
+  }, [remoteSocketId, socket]);
+
+  useEffect(() => {
+    peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
     return () => {
-      socket.off("user-joined");
+      peer.peer.removeEventListener("negotiationneeded", handleNegoNeeded);
     };
-  }, [stream, roomId, location.state?.name]);
+  }, [handleNegoNeeded]);
+
+  const handleNegoNeedIncomming = useCallback(
+    async ({ from, offer }) => {
+      const ans = await peer.getAnswer(offer);
+      socket.emit("peer:nego:done", { to: from, ans });
+    },
+    [socket]
+  );
+
+  const handleNegoNeedFinal = useCallback(async ({ ans }) => {
+    await peer.setLocalDescription(ans);
+  }, []);
+
+  useEffect(() => {
+    peer.peer.addEventListener("track", async (ev) => {
+      const remoteStream = ev.streams;
+      console.log("GOT TRACKS!!");
+      setRemoteStream(remoteStream[0]);
+    });
+  }, []);
+
+  useEffect(() => {
+    socket.on("user:joined", handleUserJoined);
+    socket.on("incomming:call", handleIncommingCall);
+    socket.on("call:accepted", handleCallAccepted);
+    socket.on("peer:nego:needed", handleNegoNeedIncomming);
+    socket.on("peer:nego:final", handleNegoNeedFinal);
+
+    return () => {
+      socket.off("user:joined", handleUserJoined);
+      socket.off("incomming:call", handleIncommingCall);
+      socket.off("call:accepted", handleCallAccepted);
+      socket.off("peer:nego:needed", handleNegoNeedIncomming);
+      socket.off("peer:nego:final", handleNegoNeedFinal);
+    };
+  }, [
+    socket,
+    handleUserJoined,
+    handleIncommingCall,
+    handleCallAccepted,
+    handleNegoNeedIncomming,
+    handleNegoNeedFinal,
+  ]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center flex-col bg-black text-white">
-      <h1 className="text-2xl font-bold mb-4">Room: {roomId}</h1>
-      <video
-        ref={localVideoRef}
-        autoPlay
-        muted
-        playsInline
-        className="rounded-md w-96 border-2 border-yellow-500"
-      />
+    <div>
+      <h1>Room Page</h1>
+      <h4>{remoteSocketId ? "Connected" : "No one in room"}</h4>
+      {myStream && <button onClick={sendStreams}>Send Stream</button>}
+      {remoteSocketId && <button onClick={handleCallUser}>CALL</button>}
+      {myStream && (
+        <>
+          <h1>My Stream</h1>
+          <ReactPlayer
+            playing
+            muted
+            height="100px"
+            width="200px"
+            url={myStream}
+          />
+        </>
+      )}
+      {remoteStream && (
+        <>
+          <h1>Remote Stream</h1>
+          <ReactPlayer
+            playing
+            muted
+            height="100px"
+            width="200px"
+            url={remoteStream}
+          />
+        </>
+      )}
     </div>
   );
-}
+};
 
-export default Room;
+export default RoomPage;

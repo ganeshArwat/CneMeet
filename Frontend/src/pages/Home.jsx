@@ -1,26 +1,51 @@
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
+import { useSocket } from "../providers/SocketProvider";
 
 function Home() {
   const [name, setName] = useState("");
-  const [roomId, setRoomId] = useState("");
+  const [room, setRoom] = useState("");
+
+  const { socket } = useSocket();
   const navigate = useNavigate();
 
-  const handleCreateRoom = (e) => {
-    e.preventDefault();
-    if (!name) return;
-    const id = uuidv4();
-    navigate(`/room/${id}`, { state: { name } });
-  };
+  const handleCreateRoom = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (!name) return;
+      const id = uuidv4();
+      setRoom(id);
+      socket.emit("room:join", { userName: name, room: id });
+    },
+    [name, socket]
+  );
 
-  const handleJoinRoom = (e) => {
-    e.preventDefault();
-    if (!roomId) return;
-    if (roomId) {
-      navigate(`/room/${roomId}`, { state: { name } });
-    }
-  };
+  const handleJoinRoom = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (!room || !name) return;
+      if (room) {
+        socket.emit("room:join", { userName: name, room });
+      }
+    },
+    [room, name, socket]
+  );
+
+  const handleRoomJoined = useCallback(
+    ({ userName, room }) => {
+      navigate(`/room/${room}`, { state: { name } });
+    },
+    [navigate, name]
+  );
+
+  useEffect(() => {
+    socket.on("room:join", handleRoomJoined);
+
+    return () => {
+      socket.off("room:join", handleRoomJoined);
+    };
+  }, [socket, handleRoomJoined]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
@@ -61,13 +86,13 @@ function Home() {
           />
           <input
             type="text"
-            name="roomId"
-            id="roomId"
+            name="room"
+            id="room"
             placeholder="Room ID"
             className="bg-transparent rounded-md border border-newutral-900 p-2 text-neutral-300 w-1/2"
             required
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
+            value={room}
+            onChange={(e) => setRoom(e.target.value)}
           />
 
           <button
