@@ -33,8 +33,8 @@ function Home() {
   );
 
   const handleRoomJoined = useCallback(
-    ({ userName, room }) => {
-      navigate(`/room/${room}`, { state: { name } });
+    ({ userName, room, socketId }) => {
+      navigate(`/room/${room}`, { state: { name, socketId } });
     },
     [navigate, name]
   );

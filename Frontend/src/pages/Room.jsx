@@ -4,14 +4,16 @@ import peer from "../service/peer";
 import { useSocket } from "../providers/SocketProvider";
 import VideoRoom from "../components/VideoRoom";
 import { useLocation, useParams } from "react-router-dom";
+import Video from "../components/Video";
 
 ReactPlayer;
 const RoomPage = () => {
   const { roomId } = useParams();
   const { socket } = useSocket();
   const myName = useLocation().state.name;
-  console.log(myName);
-  const [localSocketId, setLocalSocketId] = useState(null);
+  const mySocketId = useLocation().state.socketId;
+
+  const [localSocketId, setLocalSocketId] = useState(mySocketId);
   const [localUserName, setLocalUserName] = useState(myName);
   const [myStream, setMyStream] = useState();
 
@@ -132,16 +134,26 @@ const RoomPage = () => {
   return (
     <>
       <div>
-        <h4>{remoteSocketId ? "Connected" : "No one in room"}</h4>
         {myStream && <button onClick={sendStreams}>Send Stream</button>}
         {remoteSocketId && <button onClick={handleCallUser}>CALL</button>}
       </div>
-      <VideoRoom
-        roomId={roomId}
-        myStream={myStream}
-        remoteStream={remoteStream}
-        RemoteUserName={RemoteUserName}
-      />
+      <VideoRoom>
+        <div className="mb-4 flex justify-between">
+          <span className="text-xl font-bold m-4">Room ID: {roomId}</span>
+          {remoteSocketId && <>
+            <div className="font-semibold m-4">
+              <span className="bg-blue-100 text-blue-800 text-l font-medium m-4 p-4 rounded-xl dark:bg-blue-900 dark:text-blue-300">
+                {RemoteUserName} is Waiting <button className="btn bg-amber-400 p-2 rounded-xl font-semibold text-white" onClick={handleCallUser}>Admit</button>
+              </span>
+            </div>
+          </>}
+
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Video stream={myStream} UserName={"You"} />
+          <Video stream={remoteStream} UserName={RemoteUserName} />
+        </div>
+      </VideoRoom>
     </>
   );
 };
