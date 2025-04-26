@@ -16,6 +16,7 @@ const RoomPage = () => {
   const [localSocketId, setLocalSocketId] = useState(mySocketId);
   const [localUserName, setLocalUserName] = useState(myName);
   const [myStream, setMyStream] = useState();
+  const [isCalled, setIsCalled] = useState(false);
 
   const [remoteSocketId, setRemoteSocketId] = useState(null);
   const [RemoteUserName, setRemoteUserName] = useState(null);
@@ -38,6 +39,7 @@ const RoomPage = () => {
       fromName: localUserName,
       offer,
     });
+    setIsCalled(true);
     setMyStream(stream);
   }, [remoteSocketId, socket]);
 
@@ -133,17 +135,17 @@ const RoomPage = () => {
 
   return (
     <>
-      <div>
+      {/* <div>
         {myStream && <button onClick={sendStreams}>Send Stream</button>}
         {remoteSocketId && <button onClick={handleCallUser}>CALL</button>}
-      </div>
+      </div> */}
       <VideoRoom>
         <div className="mb-4 flex justify-between">
           <span className="text-xl font-bold m-4">Room ID: {roomId}</span>
-          {remoteSocketId && <>
+          {(remoteSocketId && !isCalled) && <>
             <div className="font-semibold m-4">
               <span className="bg-blue-100 text-blue-800 text-l font-medium m-4 p-4 rounded-xl dark:bg-blue-900 dark:text-blue-300">
-                {RemoteUserName} is Waiting <button className="btn bg-amber-400 p-2 rounded-xl font-semibold text-white" onClick={handleCallUser}>Admit</button>
+                {RemoteUserName} is Waiting <button className="btn bg-amber-400 p-2 rounded-xl font-semibold text-white" onClick={handleCallUser}>Connect</button>
               </span>
             </div>
           </>}
