@@ -2,9 +2,12 @@ import React, { useEffect, useCallback, useState } from "react";
 import ReactPlayer from "react-player";
 import peer from "../service/peer";
 import { useSocket } from "../providers/SocketProvider";
+import VideoRoom from "../components/VideoRoom";
+import { useParams } from "react-router-dom";
 
 ReactPlayer;
 const RoomPage = () => {
+  const { roomId } = useParams();
   const { socket } = useSocket();
   const [remoteSocketId, setRemoteSocketId] = useState(null);
   const [myStream, setMyStream] = useState();
@@ -13,6 +16,7 @@ const RoomPage = () => {
   const handleUserJoined = useCallback(({ userName, id }) => {
     console.log(`User ${userName} joined room`);
     setRemoteSocketId(id);
+    handleCallUser();
   }, []);
 
   const handleCallUser = useCallback(async () => {
@@ -22,7 +26,7 @@ const RoomPage = () => {
     });
     const offer = await peer.getOffer();
     socket.emit("user:call", { to: remoteSocketId, offer });
-    setMyStream(stream);
+    // setMyStream(stream);
   }, [remoteSocketId, socket]);
 
   const handleIncommingCall = useCallback(
@@ -110,37 +114,23 @@ const RoomPage = () => {
     handleNegoNeedFinal,
   ]);
 
+  useEffect(() => {
+    if (!remoteSocketId) return;
+  }, [remoteSocketId]);
+
   return (
-    <div>
-      <h1>Room Page</h1>
-      <h4>{remoteSocketId ? "Connected" : "No one in room"}</h4>
-      {myStream && <button onClick={sendStreams}>Send Stream</button>}
-      {remoteSocketId && <button onClick={handleCallUser}>CALL</button>}
-      {myStream && (
-        <>
-          <h1>My Stream</h1>
-          <ReactPlayer
-            playing
-            muted
-            height="100px"
-            width="200px"
-            url={myStream}
-          />
-        </>
-      )}
-      {remoteStream && (
-        <>
-          <h1>Remote Stream</h1>
-          <ReactPlayer
-            playing
-            muted
-            height="100px"
-            width="200px"
-            url={remoteStream}
-          />
-        </>
-      )}
-    </div>
+    <>
+      <div>
+        <h4>{remoteSocketId ? "Connected" : "No one in room"}</h4>
+        {myStream && <button onClick={sendStreams}>Send Stream</button>}
+        {remoteSocketId && <button onClick={handleCallUser}>CALL</button>}
+      </div>
+      <VideoRoom
+        roomId={roomId}
+        myStream={myStream}
+        remoteStream={remoteStream}
+      />
+    </>
   );
 };
 
