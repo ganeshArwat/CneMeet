@@ -16,7 +16,6 @@ const RoomPage = () => {
   const handleUserJoined = useCallback(({ userName, id }) => {
     console.log(`User ${userName} joined room`);
     setRemoteSocketId(id);
-    handleCallUser();
   }, []);
 
   const handleCallUser = useCallback(async () => {
@@ -26,7 +25,7 @@ const RoomPage = () => {
     });
     const offer = await peer.getOffer();
     socket.emit("user:call", { to: remoteSocketId, offer });
-    // setMyStream(stream);
+    setMyStream(stream);
   }, [remoteSocketId, socket]);
 
   const handleIncommingCall = useCallback(
