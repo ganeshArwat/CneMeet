@@ -3,19 +3,26 @@ import ReactPlayer from "react-player";
 import peer from "../service/peer";
 import { useSocket } from "../providers/SocketProvider";
 import VideoRoom from "../components/VideoRoom";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 ReactPlayer;
 const RoomPage = () => {
   const { roomId } = useParams();
   const { socket } = useSocket();
-  const [remoteSocketId, setRemoteSocketId] = useState(null);
+  const myName = useLocation().state.name;
+  console.log(myName);
+  const [localSocketId, setLocalSocketId] = useState(null);
+  const [localUserName, setLocalUserName] = useState(myName);
   const [myStream, setMyStream] = useState();
+
+  const [remoteSocketId, setRemoteSocketId] = useState(null);
+  const [RemoteUserName, setRemoteUserName] = useState(null);
   const [remoteStream, setRemoteStream] = useState();
 
   const handleUserJoined = useCallback(({ userName, id }) => {
     console.log(`User ${userName} joined room`);
     setRemoteSocketId(id);
+    setRemoteUserName(userName);
   }, []);
 
   const handleCallUser = useCallback(async () => {
@@ -24,13 +31,18 @@ const RoomPage = () => {
       video: true,
     });
     const offer = await peer.getOffer();
-    socket.emit("user:call", { to: remoteSocketId, offer });
+    socket.emit("user:call", {
+      to: remoteSocketId,
+      fromName: localUserName,
+      offer,
+    });
     setMyStream(stream);
   }, [remoteSocketId, socket]);
 
   const handleIncommingCall = useCallback(
-    async ({ from, offer }) => {
+    async ({ from, fromName, offer }) => {
       setRemoteSocketId(from);
+      setRemoteUserName(fromName);
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
@@ -128,6 +140,7 @@ const RoomPage = () => {
         roomId={roomId}
         myStream={myStream}
         remoteStream={remoteStream}
+        RemoteUserName={RemoteUserName}
       />
     </>
   );

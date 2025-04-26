@@ -1,6 +1,6 @@
 import ReactPlayer from "react-player";
 
-function VideoRoom({ roomId, myStream, remoteStream }) {
+function VideoRoom({ roomId, myStream, remoteStream, RemoteUserName }) {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <h1 className="text-xl font-bold mb-4">Room ID: {roomId}</h1>
@@ -22,7 +22,7 @@ function VideoRoom({ roomId, myStream, remoteStream }) {
             className="w-full h-[300px] object-cover"
             url={remoteStream}
           />
-          <p className="text-center">Peer</p>
+          <p className="text-center">{RemoteUserName ? `${RemoteUserName}` : ""}</p>
         </div>
       </div>
     </div>
