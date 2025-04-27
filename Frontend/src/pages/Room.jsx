@@ -5,20 +5,22 @@ import { useSocket } from "../providers/SocketProvider";
 import VideoRoom from "../components/VideoRoom";
 import { useLocation, useParams } from "react-router-dom";
 import Video from "../components/Video";
+import ChatRoom from "../components/ChatRoom";
+import Header from "../components/Header";
 
 ReactPlayer;
 const RoomPage = () => {
   const { roomId } = useParams();
   const { socket } = useSocket();
-  const myName = useLocation().state.name;
-  const mySocketId = useLocation().state.socketId;
+  const myName = useLocation().state?.name;
+  const mySocketId = useLocation().state?.socketId;
 
   const [localSocketId, setLocalSocketId] = useState(mySocketId);
   const [localUserName, setLocalUserName] = useState(myName);
   const [myStream, setMyStream] = useState();
 
   const [remoteSocketId, setRemoteSocketId] = useState(null);
-  const [RemoteUserName, setRemoteUserName] = useState(null);
+  const [remoteUserName, setRemoteUserName] = useState(null);
   const [remoteStream, setRemoteStream] = useState();
 
   const [intialCall, setInitialCall] = useState(false);
@@ -149,15 +151,15 @@ const RoomPage = () => {
 
   return (
     <>
-      <VideoRoom>
-        <div className="mb-4 flex justify-between">
-          <span className="text-xl font-bold m-4">Room ID: {roomId}</span>
+      <div className="min-h-screen bg-gray-900 text-white">
+        <div className="flex flex-col h-screen bg-gray-900">
+          <Header roomId={roomId} />
+          <div className="flex-grow grid grid-cols-1 sm:grid-cols-[4fr_2fr] gap-4 p-4">
+            <VideoRoom myStream={myStream} localUserName={localUserName} remoteStream={remoteStream} remoteUserName={remoteUserName} ></VideoRoom>
+            <ChatRoom />
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Video stream={myStream} UserName={"You"} />
-          <Video stream={remoteStream} UserName={RemoteUserName} />
-        </div>
-      </VideoRoom>
+      </div>
     </>
   );
 };
