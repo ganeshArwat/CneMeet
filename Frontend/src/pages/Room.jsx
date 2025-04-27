@@ -21,10 +21,13 @@ const RoomPage = () => {
   const [RemoteUserName, setRemoteUserName] = useState(null);
   const [remoteStream, setRemoteStream] = useState();
 
+  const [intialCall, setInitialCall] = useState(false);
+
   const handleUserJoined = useCallback(({ userName, id }) => {
     console.log(`User ${userName} joined room`);
     setRemoteSocketId(id);
     setRemoteUserName(userName);
+    setInitialCall(true);
   }, []);
 
   const handleCallUser = useCallback(async () => {
@@ -42,7 +45,7 @@ const RoomPage = () => {
   }, [remoteSocketId, socket, localUserName]);
 
   useEffect(() => {
-    if (remoteSocketId && !myStream) {
+    if (remoteSocketId && intialCall && !myStream) {
       handleCallUser();
     }
   }, [remoteSocketId, myStream, handleCallUser]);
@@ -75,7 +78,7 @@ const RoomPage = () => {
       console.log("Call Accepted!");
       sendStreams();
     },
-    [sendStreams]
+    [sendStreams, socket]
   );
 
   const handleNegoNeeded = useCallback(async () => {
@@ -106,9 +109,16 @@ const RoomPage = () => {
     peer.peer.addEventListener("track", async (ev) => {
       const remoteStream = ev.streams;
       console.log("GOT TRACKS!!");
+      setInitialCall(true);
       setRemoteStream(remoteStream[0]);
     });
   }, []);
+
+  useEffect(() => {
+    if (intialCall && myStream) {
+      sendStreams();
+    }
+  }, [intialCall, myStream, sendStreams]);
 
   useEffect(() => {
     socket.on("user:joined", handleUserJoined);
@@ -139,10 +149,6 @@ const RoomPage = () => {
 
   return (
     <>
-      {/* <div>
-        {myStream && <button onClick={sendStreams}>Send Stream</button>}
-        {remoteSocketId && <button onClick={handleCallUser}>CALL</button>}
-      </div> */}
       <VideoRoom>
         <div className="mb-4 flex justify-between">
           <span className="text-xl font-bold m-4">Room ID: {roomId}</span>

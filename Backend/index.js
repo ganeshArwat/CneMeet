@@ -15,7 +15,7 @@ io.on("connection", (socket) => {
     socketidToUserNameMap.set(socket.id, userName);
     io.to(room).emit("user:joined", { userName, id: socket.id });
     socket.join(room);
-    io.to(socket.id).emit("room:join", {...data, socketId: socket.id});
+    io.to(socket.id).emit("room:join", { ...data, socketId: socket.id });
   });
 
   socket.on("user:call", ({ to, fromName, offer }) => {
