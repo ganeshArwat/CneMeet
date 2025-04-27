@@ -1,24 +1,29 @@
-function VideoControls() {
+function VideoControls({ toggleVideo, videoOn, toggleAudio, audioOn, disconnectCall }) {
     return (
         <div className="bg-gray-800 p-4 flex justify-center gap-6 mt-auto">
             <button
-
-                className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-500"
+                className={`${videoOn ? "bg-gray-900" : "bg-red-600"}  text-white px-4 py-2 rounded-full hover:bg-blue-500 shadow-md `}
+                onClick={toggleVideo}
+                title={videoOn ? "Turn off video" : "Turn on video"}
             >
-                {true ? "Turn Off Video" : "Turn On Video"}
+                {videoOn ? "Turn Off Video" : "Turn On Video"}
             </button>
             <button
-                className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-500"
+                className={`${audioOn ? "bg-gray-900" : "bg-red-600"} bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-green-500 shadow-md`}
+                onClick={toggleAudio}
+                title={audioOn ? "Mute audio" : "Unmute audio"}
             >
-                {true ? "Mute Audio" : "Unmute Audio"}
+                {audioOn ? "Mute Audio" : "Unmute Audio"}
             </button>
             <button
-                className="bg-yellow-600 text-white px-4 py-2 rounded-full hover:bg-yellow-500"
+                className="bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-yellow-500 shadow-md"
             >
                 {true ? "Stop Sharing" : "Start Sharing"}
             </button>
             <button
                 className="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-500"
+                onClick={disconnectCall}
+                title="Disconnect from call"
             >
                 Disconnect
             </button>

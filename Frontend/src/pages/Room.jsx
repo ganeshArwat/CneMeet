@@ -3,13 +3,14 @@ import ReactPlayer from "react-player";
 import peer from "../service/peer";
 import { useSocket } from "../providers/SocketProvider";
 import VideoRoom from "../components/VideoRoom";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Video from "../components/Video";
 import ChatRoom from "../components/ChatRoom";
 import Header from "../components/Header";
 
 ReactPlayer;
 const RoomPage = () => {
+  const navigate = useNavigate();
   const { roomId } = useParams();
   const { socket } = useSocket();
   const myName = useLocation().state?.name;
@@ -18,6 +19,8 @@ const RoomPage = () => {
   const [localSocketId, setLocalSocketId] = useState(mySocketId);
   const [localUserName, setLocalUserName] = useState(myName);
   const [myStream, setMyStream] = useState();
+  const [videoOn, setVideoOn] = useState(true);
+  const [audioOn, setAudioOn] = useState(true);
 
   const [remoteSocketId, setRemoteSocketId] = useState(null);
   const [remoteUserName, setRemoteUserName] = useState(null);
@@ -88,6 +91,37 @@ const RoomPage = () => {
     socket.emit("peer:nego:needed", { offer, to: remoteSocketId });
   }, [remoteSocketId, socket]);
 
+  const toggleVideo = () => {
+    if (myStream) {
+      myStream.getVideoTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+      setVideoOn((prev) => !prev);
+    }
+  };
+
+  const toggleAudio = () => {
+    if (myStream) {
+      myStream.getAudioTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+      setAudioOn((prev) => !prev);
+    }
+  };
+
+  const disconnectCall = () => {
+    if (myStream) {
+      myStream.getTracks().forEach((track) => {
+        track.stop(); // Stop each track (video + audio)
+      });
+      setMyStream(null); // Clear the stream from state
+      setRemoteStream(null); // Clear the remote stream from state
+      setRemoteSocketId(null);
+      socket.emit("call:ended", { to: remoteSocketId });
+      navigate("/"); // Navigate to the home page or any other page
+    }
+  };
+
   useEffect(() => {
     peer.peer.addEventListener("negotiationneeded", handleNegoNeeded);
     return () => {
@@ -128,6 +162,7 @@ const RoomPage = () => {
     socket.on("call:accepted", handleCallAccepted);
     socket.on("peer:nego:needed", handleNegoNeedIncomming);
     socket.on("peer:nego:final", handleNegoNeedFinal);
+    socket.on("call:ended", disconnectCall)
 
     return () => {
       socket.off("user:joined", handleUserJoined);
@@ -135,6 +170,7 @@ const RoomPage = () => {
       socket.off("call:accepted", handleCallAccepted);
       socket.off("peer:nego:needed", handleNegoNeedIncomming);
       socket.off("peer:nego:final", handleNegoNeedFinal);
+      socket.off("call:ended", disconnectCall)
     };
   }, [
     socket,
@@ -149,13 +185,16 @@ const RoomPage = () => {
     if (!remoteSocketId) return;
   }, [remoteSocketId]);
 
+
+
+
   return (
     <>
       <div className="min-h-screen bg-gray-900 text-white">
         <div className="flex flex-col h-screen bg-gray-900">
           <Header roomId={roomId} />
           <div className="flex-grow grid grid-cols-1 sm:grid-cols-[4fr_2fr] gap-4 p-4">
-            <VideoRoom myStream={myStream} localUserName={localUserName} remoteStream={remoteStream} remoteUserName={remoteUserName} ></VideoRoom>
+            <VideoRoom myStream={myStream} localUserName={localUserName} remoteStream={remoteStream} remoteUserName={remoteUserName} toggleVideo={toggleVideo} videoOn={videoOn} toggleAudio={toggleAudio} audioOn={audioOn} disconnectCall={disconnectCall}  ></VideoRoom>
             <ChatRoom />
           </div>
         </div>
