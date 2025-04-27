@@ -43,6 +43,12 @@ const RoomPage = () => {
     setMyStream(stream);
   }, [remoteSocketId, socket]);
 
+  useEffect(() => {
+    if (remoteSocketId && !isCalled) {
+      handleCallUser();
+    }
+  }, [remoteSocketId, isCalled, handleCallUser]);
+
   const handleIncommingCall = useCallback(
     async ({ from, fromName, offer }) => {
       setRemoteSocketId(from);
