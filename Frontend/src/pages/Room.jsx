@@ -4,9 +4,9 @@ import peer from "../service/peer";
 import { useSocket } from "../providers/SocketProvider";
 import VideoRoom from "../components/VideoRoom";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import Video from "../components/Video";
 import ChatRoom from "../components/ChatRoom";
 import Header from "../components/Header";
+import toast from "react-hot-toast";
 
 ReactPlayer;
 const RoomPage = () => {
@@ -27,6 +27,7 @@ const RoomPage = () => {
   const [messages, setMessages] = useState([]);
   const [screenStream, setScreenStream] = useState(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
 
 
 
@@ -49,6 +50,7 @@ const RoomPage = () => {
     setRemoteSocketId(id);
     setRemoteUserName(userName);
     setInitialCall(true);
+    toast.success(`${userName} joined the room`);
   }, []);
 
   const handleCallUser = useCallback(async () => {
@@ -64,6 +66,7 @@ const RoomPage = () => {
     const stream = await setupMediaStream();
     const answer = await peer.getAnswer(offer);
     socket.emit("call:accepted", { to: from, ans: answer });
+    toast.success(`${fromName} joined the room`);
   }, [socket]);
 
   const handleCallAccepted = useCallback(({ from, ans }) => {
@@ -110,6 +113,10 @@ const RoomPage = () => {
     myStream.getAudioTracks().forEach((track) => (track.enabled = !track.enabled));
     setAudioOn((prev) => !prev);
   }, [myStream]);
+
+  const togglePin = useCallback(() => {
+    setIsPinned((prev) => !prev);
+  }, []);
 
   // Chat Controls
   const sendMessage = useCallback((message) => {
@@ -260,7 +267,22 @@ const RoomPage = () => {
         <div className="flex flex-col h-screen bg-gray-900">
           <Header roomId={roomId} />
           <div className="flex-grow grid grid-cols-1 sm:grid-cols-[4fr_2fr] gap-4 p-4">
-            <VideoRoom myStream={myStream} localUserName={localUserName} remoteStream={remoteStream} remoteUserName={remoteUserName} toggleVideo={toggleVideo} videoOn={videoOn} toggleAudio={toggleAudio} audioOn={audioOn} disconnectCall={disconnectCall} toggleScreenShare={toggleScreenShare} isScreenSharing={isScreenSharing} screenStream={screenStream} ></VideoRoom>
+            <VideoRoom
+              myStream={myStream}
+              localUserName={localUserName}
+              remoteStream={remoteStream}
+              remoteUserName={remoteUserName}
+              toggleVideo={toggleVideo}
+              videoOn={videoOn}
+              toggleAudio={toggleAudio}
+              audioOn={audioOn}
+              disconnectCall={disconnectCall}
+              toggleScreenShare={toggleScreenShare}
+              isScreenSharing={isScreenSharing}
+              screenStream={screenStream}
+              isPinned={isPinned}
+              togglePin={togglePin} />
+
             <ChatRoom sendMessage={sendMessage} setMessages={setMessages} messages={messages} />
           </div>
         </div>

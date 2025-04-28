@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
+import { TbPin, TbPinnedOff } from "react-icons/tb";
 
-function Video({ stream, UserName, isMuted = true }) {
+function Video({ stream, UserName, isMuted = true, isPinned = false, togglePin }) {
   const [myStream, setMyStream] = useState(null);
 
   // Using useRef to directly reference the video element
@@ -15,7 +16,10 @@ function Video({ stream, UserName, isMuted = true }) {
   }, [stream]); // Only run the effect when 'stream' changes
 
   return (
-    <div className="bg-black rounded-xl overflow-hidden w-full sm:w-[48%] shadow-lg">
+    <div className={`bg-black rounded-xl overflow-hidden shadow-lg ${isPinned
+      ? " w-2/3 " // Fullscreen pinned
+      : "w-full sm:w-[48%]" // Normal small size
+      }`}>
       <div className="w-full h-auto aspect-[16/9]">
         <video
           autoPlay
@@ -25,7 +29,7 @@ function Video({ stream, UserName, isMuted = true }) {
         />
       </div>
       <div className="bg-gray-800 p-2 text-center text-white rounded-b-xl h-full">
-        <h1 className="text-lg font-semibold">{UserName}</h1>
+        <h1 className="text-lg font-semibold">{UserName ? UserName : "____"} {UserName && UserName != "you" ? <button onClick={togglePin}>{isPinned ? <TbPinnedOff /> : <TbPin />}</button> : ""} </h1>
       </div>
     </div>
   );
