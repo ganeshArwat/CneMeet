@@ -125,76 +125,69 @@ const RoomPage = () => {
   const startScreenShare = useCallback(async () => {
     try {
       const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
-
-      // Set the screen stream
       setScreenStream(screen);
 
-      // Replace the current video track with the screen track
       const videoTrack = screen.getVideoTracks()[0];
-      const sender = peer.peer.getSenders().find((s) => s.track.kind === videoTrack.kind);
-      sender.replaceTrack(videoTrack);
+      const videoSender = peer.peer.getSenders().find(s => s.track?.kind === 'video');
+
+      if (videoSender) {
+        await videoSender.replaceTrack(videoTrack);
+      }
 
       setIsScreenSharing(true);
 
-      // Optionally, you can stop the camera when starting screen share
+      // Optionally pause the camera track (don't stop it)
       const cameraTrack = myStream?.getVideoTracks()[0];
-      if (cameraTrack) cameraTrack.stop();
+      if (cameraTrack) {
+        cameraTrack.enabled = false;
+      }
+
     } catch (error) {
       console.error('Error starting screen share:', error);
     }
-  }, [peer, myStream]);
+  }, [peer.peer, myStream]);
 
   const stopScreenShare = useCallback(async () => {
     if (!screenStream) return;
 
-    console.log("Stopping screen share...");
+    try {
+      // Stop the screen sharing tracks
+      screenStream.getTracks().forEach((track) => track.stop());
 
-    // Stop the screen sharing tracks
-    screenStream.getTracks().forEach((track) => track.stop());
+      // Get the current video track from myStream
+      const cameraTrack = myStream?.getVideoTracks()[0];
 
-    // Get the camera video track (if it's not already set)
-    const cameraTrack = myStream?.getVideoTracks()[0];
-
-    // If there is no camera track, get a new media stream with the camera
-    if (!cameraTrack) {
-      console.log("Camera track is null, attempting to get a new stream...");
-      const newStream = await setupMediaStream();  // Re-get stream if the track is null
-      setMyStream(newStream);
-    }
-
-    // Replace the screen video track with the camera video track
-    console.log("Replacing screen track with camera track");
-
-    const sender = peer.peer.getSenders().find((s) => s.track.kind === 'video');
-    if (sender && cameraTrack) {
-      console.log("Replacing track with camera track");
-      await sender.replaceTrack(cameraTrack);  // Replace the track
-    }
-
-    // Stop screen share
-    setScreenStream(null);
-    setIsScreenSharing(false);
-
-    // Ensure the camera track is added back to the peer connection if necessary
-    if (cameraTrack && myStream) {
-      console.log("Checking if camera track is already added...");
-
-      const existingSender = peer.peer.getSenders().find((s) => s.track === cameraTrack);
-
-      if (!existingSender) {
-        // If the camera track is not yet added, add it to the peer connection
-        console.log("Adding camera stream back to peer connection.");
-        myStream.getTracks().forEach((track) => {
-          peer.peer.addTrack(track, myStream);  // Add the camera stream tracks to the peer connection
+      // If we don't have a camera track, get a new stream
+      if (!cameraTrack) {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true
         });
-      } else {
-        console.log("Camera track is already added to peer connection.");
-      }
-    }
+        setMyStream(newStream);
 
-    console.log("Screen share stopped and camera track restored.");
-    sendStreams();  // Send the updated streams to the peer
-  }, [screenStream, myStream, peer, setupMediaStream]);
+        // Replace the video track with the new camera track
+        const newVideoTrack = newStream.getVideoTracks()[0];
+        const videoSender = peer.peer.getSenders().find(s => s.track?.kind === 'video');
+        if (videoSender && newVideoTrack) {
+          await videoSender.replaceTrack(newVideoTrack);
+        }
+      } else {
+        // We have a camera track, just replace the screen track with it
+        const videoSender = peer.peer.getSenders().find(s => s.track?.kind === 'video');
+        if (videoSender && cameraTrack) {
+          await videoSender.replaceTrack(cameraTrack);
+        }
+      }
+
+      // Clean up and reset states
+      setScreenStream(null);
+      setIsScreenSharing(false);
+
+      myStream.getVideoTracks().forEach((track) => (track.enabled = true));
+    } catch (error) {
+      console.error('Error stopping screen share:', error);
+    }
+  }, [screenStream, myStream, peer.peer]);
 
   const toggleScreenShare = useCallback(() => {
     if (isScreenSharing) {
