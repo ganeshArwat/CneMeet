@@ -36,7 +36,11 @@ io.on("connection", (socket) => {
     io.to(to).emit("peer:nego:final", { from: socket.id, ans });
   });
 
-  socket.on("call:ended", ({to}) => {
+  socket.on("chat:message", ({ message, to }) => {
+    io.to(to).emit("chat:message", { message, from: socket.id });
+  });
+
+  socket.on("call:ended", ({ to }) => {
     console.log("call:ended", to);
     io.to(to).emit("call:ended", { from: socket.id });
   });
