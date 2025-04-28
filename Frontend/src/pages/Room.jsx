@@ -25,6 +25,10 @@ const RoomPage = () => {
   const [videoOn, setVideoOn] = useState(true);
   const [audioOn, setAudioOn] = useState(true);
   const [messages, setMessages] = useState([]);
+  const [screenStream, setScreenStream] = useState(null);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+
+
 
   // Helpers
   const setupMediaStream = async () => {
@@ -116,6 +120,90 @@ const RoomPage = () => {
     setMessages((prevMessages) => [...prevMessages, { ...message, type: "received" }]);
   }, []);
 
+
+  // Screen Sharing
+  const startScreenShare = useCallback(async () => {
+    try {
+      const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
+
+      // Set the screen stream
+      setScreenStream(screen);
+
+      // Replace the current video track with the screen track
+      const videoTrack = screen.getVideoTracks()[0];
+      const sender = peer.peer.getSenders().find((s) => s.track.kind === videoTrack.kind);
+      sender.replaceTrack(videoTrack);
+
+      setIsScreenSharing(true);
+
+      // Optionally, you can stop the camera when starting screen share
+      const cameraTrack = myStream?.getVideoTracks()[0];
+      if (cameraTrack) cameraTrack.stop();
+    } catch (error) {
+      console.error('Error starting screen share:', error);
+    }
+  }, [peer, myStream]);
+
+  const stopScreenShare = useCallback(async () => {
+    if (!screenStream) return;
+
+    console.log("Stopping screen share...");
+
+    // Stop the screen sharing tracks
+    screenStream.getTracks().forEach((track) => track.stop());
+
+    // Get the camera video track (if it's not already set)
+    const cameraTrack = myStream?.getVideoTracks()[0];
+
+    // If there is no camera track, get a new media stream with the camera
+    if (!cameraTrack) {
+      console.log("Camera track is null, attempting to get a new stream...");
+      const newStream = await setupMediaStream();  // Re-get stream if the track is null
+      setMyStream(newStream);
+    }
+
+    // Replace the screen video track with the camera video track
+    console.log("Replacing screen track with camera track");
+
+    const sender = peer.peer.getSenders().find((s) => s.track.kind === 'video');
+    if (sender && cameraTrack) {
+      console.log("Replacing track with camera track");
+      await sender.replaceTrack(cameraTrack);  // Replace the track
+    }
+
+    // Stop screen share
+    setScreenStream(null);
+    setIsScreenSharing(false);
+
+    // Ensure the camera track is added back to the peer connection if necessary
+    if (cameraTrack && myStream) {
+      console.log("Checking if camera track is already added...");
+
+      const existingSender = peer.peer.getSenders().find((s) => s.track === cameraTrack);
+
+      if (!existingSender) {
+        // If the camera track is not yet added, add it to the peer connection
+        console.log("Adding camera stream back to peer connection.");
+        myStream.getTracks().forEach((track) => {
+          peer.peer.addTrack(track, myStream);  // Add the camera stream tracks to the peer connection
+        });
+      } else {
+        console.log("Camera track is already added to peer connection.");
+      }
+    }
+
+    console.log("Screen share stopped and camera track restored.");
+    sendStreams();  // Send the updated streams to the peer
+  }, [screenStream, myStream, peer, setupMediaStream]);
+
+  const toggleScreenShare = useCallback(() => {
+    if (isScreenSharing) {
+      stopScreenShare();
+    } else {
+      startScreenShare();
+    }
+  }, [isScreenSharing, startScreenShare, stopScreenShare]);
+
   // Effects
   useEffect(() => {
     peer.peer.addEventListener("negotiationneeded", handleNegotiationNeeded);
@@ -179,7 +267,7 @@ const RoomPage = () => {
         <div className="flex flex-col h-screen bg-gray-900">
           <Header roomId={roomId} />
           <div className="flex-grow grid grid-cols-1 sm:grid-cols-[4fr_2fr] gap-4 p-4">
-            <VideoRoom myStream={myStream} localUserName={localUserName} remoteStream={remoteStream} remoteUserName={remoteUserName} toggleVideo={toggleVideo} videoOn={videoOn} toggleAudio={toggleAudio} audioOn={audioOn} disconnectCall={disconnectCall}  ></VideoRoom>
+            <VideoRoom myStream={myStream} localUserName={localUserName} remoteStream={remoteStream} remoteUserName={remoteUserName} toggleVideo={toggleVideo} videoOn={videoOn} toggleAudio={toggleAudio} audioOn={audioOn} disconnectCall={disconnectCall} toggleScreenShare={toggleScreenShare} isScreenSharing={isScreenSharing} screenStream={screenStream} ></VideoRoom>
             <ChatRoom sendMessage={sendMessage} setMessages={setMessages} messages={messages} />
           </div>
         </div>

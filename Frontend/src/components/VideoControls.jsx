@@ -1,4 +1,4 @@
-function VideoControls({ toggleVideo, videoOn, toggleAudio, audioOn, disconnectCall }) {
+function VideoControls({ toggleVideo, videoOn, toggleAudio, audioOn, disconnectCall, toggleScreenShare, isScreenSharing }) {
     return (
         <div className="bg-gray-800 p-4 flex justify-center gap-6 mt-auto">
             <button
@@ -17,8 +17,10 @@ function VideoControls({ toggleVideo, videoOn, toggleAudio, audioOn, disconnectC
             </button>
             <button
                 className="bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-yellow-500 shadow-md"
+                onClick={toggleScreenShare}
+                title={isScreenSharing ? "Stop sharing screen" : "Share screen"}
             >
-                {true ? "Stop Sharing" : "Start Sharing"}
+                {isScreenSharing ? "Stop Sharing" : "Start Sharing"}
             </button>
             <button
                 className="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-500"
