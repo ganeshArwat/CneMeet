@@ -1,7 +1,17 @@
 const { Server } = require("socket.io");
+const http = require("http");
 
-const io = new Server(5000, {
-  cors: true,
+const PORT = process.env.PORT || 5000; // 👈 important
+const server = http.createServer(); // Create empty server
+
+// const io = new Server(5000, {
+//   cors: true,
+// });
+
+const io = new Server(server, {
+  cors: {
+    origin: "*", // You can later restrict it to your frontend URL
+  },
 });
 
 const userNameToSocket = new Map();
@@ -44,4 +54,10 @@ io.on("connection", (socket) => {
     console.log("call:ended", to);
     io.to(to).emit("call:ended", { from: socket.id });
   });
+});
+
+
+// Start server
+server.listen(PORT, () => {
+  console.log(`Socket.IO server running on port ${PORT}`);
 });
