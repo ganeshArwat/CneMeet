@@ -6,6 +6,8 @@ const backendUrl = import.meta.env.VITE_SOCKET_SERVER;
 
 export const SocketProvider = ({ children }) => {
   const serverUrl = backendUrl || "http://localhost:5000"
+  // const serverUrl = "https://cnemeet.onrender.com:10000";
+  // const serverUrl = "100.20.92.101:10000";
   console.log("SocketProvider", serverUrl);
   const socket = useMemo(() => io(serverUrl), []);
   return (

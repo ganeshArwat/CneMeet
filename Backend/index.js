@@ -6,7 +6,7 @@ const app = express();
 const httpServer = createServer(app);
 
 // Use PORT from environment or fallback
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 
 const io = new Server(httpServer, {
   cors: {
@@ -55,7 +55,6 @@ io.on("connection", (socket) => {
     io.to(to).emit("call:ended", { from: socket.id });
   });
 });
-
 
 // Start the HTTP server
 httpServer.listen(PORT, () => {
