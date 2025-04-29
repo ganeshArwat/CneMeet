@@ -5,8 +5,9 @@ const SocketContext = createContext(null);
 const backendUrl = import.meta.env.VITE_SOCKET_SERVER;
 
 export const SocketProvider = ({ children }) => {
-  const serverUrl = "http://localhost:5000"
-  const socket = useMemo(() => io(backendUrl || serverUrl), []);
+  const serverUrl = backendUrl || "http://localhost:5000"
+  console.log("SocketProvider", serverUrl);
+  const socket = useMemo(() => io(serverUrl), []);
   return (
     <SocketContext.Provider value={{ socket }}>
       {children}
