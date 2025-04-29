@@ -1,16 +1,16 @@
+const express = require("express");
+const { createServer } = require("http");
 const { Server } = require("socket.io");
-const http = require("http");
 
-const PORT = process.env.PORT || 5000; // 👈 important
-const server = http.createServer(); // Create empty server
+const app = express();
+const httpServer = createServer(app);
 
-// const io = new Server(5000, {
-//   cors: true,
-// });
+// Use PORT from environment or fallback
+const PORT = process.env.PORT || 5000;
 
-const io = new Server(server, {
+const io = new Server(httpServer, {
   cors: {
-    origin: "*", // You can later restrict it to your frontend URL
+    origin: "*", // Adjust CORS rules as per your frontend
   },
 });
 
@@ -57,7 +57,7 @@ io.on("connection", (socket) => {
 });
 
 
-// Start server
-server.listen(PORT, () => {
+// Start the HTTP server
+httpServer.listen(PORT, () => {
   console.log(`Socket.IO server running on port ${PORT}`);
 });
