@@ -17,7 +17,7 @@ function Video({ stream, UserName, isMuted = true, isPinned = false, togglePin }
 
   return (
     <div className={`bg-black rounded-xl overflow-hidden shadow-lg ${isPinned
-      ? " w-2/3 " // Fullscreen pinned
+      ? "w-full md:w-2/3 " // Fullscreen pinned
       : "w-full sm:w-[48%]" // Normal small size
       }`}>
       <div className="w-full h-auto aspect-[16/9]">
