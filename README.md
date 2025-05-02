@@ -37,8 +37,8 @@ CneMeet is a **One-to-One Real-Time Communication** web application built with *
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/CodeNewbie/cnemeet.git
-cd cnemeet
+git clone https://github.com/ganeshArwat/CneMeet.git
+cd CneMeet
 ```
 
 ---
@@ -46,7 +46,7 @@ cd cnemeet
 ### 2. Setup Backend
 
 ```bash
-cd backend
+cd Backend
 npm install
 npm run dev
 ```
@@ -58,12 +58,12 @@ npm run dev
 ### 3. Setup Frontend
 
 ```bash
-cd ../frontend
+cd ../Frontend
 npm install
 npm run dev
 ```
 
-> Frontend will start on `http://localhost:3000`
+> Frontend will start on `http://localhost:5173/`
 
 ---
 
@@ -97,6 +97,7 @@ npm run dev
 
 ---
 
+<!-- Comming Soon -->
 <!-- ### 🎥 Demo Video
 
 [Watch Demo](https://youtu.be/demo-video-placeholder)
