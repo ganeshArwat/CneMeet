@@ -99,6 +99,6 @@ npm run dev
 
 ### 🎥 Demo Video
 
-[Watch Demo](https://drive.google.com/file/d/1sFGzivC8afP_dOGmapk4-8iJyrkNlRVJ/view?usp=sharing)
+[![Watch Video](https://github.com/user-attachments/assets/74b5d9b1-ecf8-49d3-ac77-b171af1310d2)](https://drive.google.com/file/d/1sFGzivC8afP_dOGmapk4-8iJyrkNlRVJ/view)
 
 ---
