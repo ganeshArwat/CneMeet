@@ -262,32 +262,34 @@ const RoomPage = () => {
 
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-900 text-white">
-        <div className="flex flex-col h-screen bg-gray-900">
-          <Header roomId={roomId} />
-          <div className="flex-grow grid grid-cols-1 sm:grid-cols-[4fr_2fr] gap-4 p-4">
-            <VideoRoom
-              myStream={myStream}
-              localUserName={localUserName}
-              remoteStream={remoteStream}
-              remoteUserName={remoteUserName}
-              toggleVideo={toggleVideo}
-              videoOn={videoOn}
-              toggleAudio={toggleAudio}
-              audioOn={audioOn}
-              disconnectCall={disconnectCall}
-              toggleScreenShare={toggleScreenShare}
-              isScreenSharing={isScreenSharing}
-              screenStream={screenStream}
-              isPinned={isPinned}
-              togglePin={togglePin} />
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+        <Header roomId={roomId} />
 
-            <ChatRoom sendMessage={sendMessage} setMessages={setMessages} messages={messages} />
-          </div>
+        <div className="flex-grow grid grid-cols-1 sm:grid-cols-1 md:grid-cols-[2fr_1fr] gap-4 p-4 overflow-auto">
+          <VideoRoom
+            myStream={myStream}
+            localUserName={localUserName}
+            remoteStream={remoteStream}
+            remoteUserName={remoteUserName}
+            toggleVideo={toggleVideo}
+            videoOn={videoOn}
+            toggleAudio={toggleAudio}
+            audioOn={audioOn}
+            disconnectCall={disconnectCall}
+            toggleScreenShare={toggleScreenShare}
+            isScreenSharing={isScreenSharing}
+            screenStream={screenStream}
+            isPinned={isPinned}
+            togglePin={togglePin}
+          />
+
+          <ChatRoom
+            sendMessage={sendMessage}
+            setMessages={setMessages}
+            messages={messages}
+          />
         </div>
       </div>
-    </>
   );
 };
 

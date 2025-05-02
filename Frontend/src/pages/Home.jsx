@@ -48,38 +48,45 @@ function Home() {
   }, [socket, handleRoomJoined]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <div className="p-6 bg-neutral-700 rounded-xl w-1/2 shadow-md flex items-center flex-col justify-center">
-        <img src="logo.png" alt="logo image" className="w-20" />
-        <h1 className="text-center text-3xl font-semibold text-neutral-300">
-          CneMeet
-        </h1>
+    <div className="min-h-screen flex items-center justify-center bg-neutral-900 px-4">
+      <div className="bg-neutral-800 rounded-2xl shadow-lg p-6 w-full sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-1/3 flex flex-col items-center">
+        <img src="logo.png" alt="CneMeet Logo" className="w-16 mb-3" />
 
-        <form className="flex flex-col items-center gap-4 mt-4 w-full ">
+        <h1 className="text-3xl font-bold text-amber-400 text-center mb-6">CneMeet</h1>
+
+        <form className="flex flex-col gap-4 w-full">
+          {/* Create Room */}
           <input
             type="text"
             name="name"
             id="name"
-            placeholder="Your name"
-            className="bg-transparent rounded-md border border-newutral-900 p-2 text-neutral-300 w-1/2"
+            placeholder="Enter your name"
+            className="bg-neutral-700 border border-neutral-600 text-neutral-200 placeholder-neutral-400 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 transition w-full"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <button
+            type="button"
             onClick={handleCreateRoom}
-            className="btn bg-amber-400 p-2 rounded-xl w-1/2 font-semibold"
+            className="bg-amber-400 hover:bg-amber-500 text-neutral-900 font-semibold py-2 rounded-md transition w-full"
           >
-            Genrate Room
+            Generate Room
           </button>
 
-          <span className="text-neutral-300"> or </span>
+          <div className="flex items-center justify-center text-neutral-400 text-sm gap-2">
+            <span className="w-1/4 border-t border-neutral-600" />
+            or
+            <span className="w-1/4 border-t border-neutral-600" />
+          </div>
+
+          {/* Join Room */}
           <input
             type="text"
             name="UserName"
             id="UserName"
-            placeholder="Your name"
-            className="bg-transparent rounded-md border border-newutral-900 p-2 text-neutral-300 w-1/2"
+            placeholder="Enter your name"
+            className="bg-neutral-700 border border-neutral-600 text-neutral-200 placeholder-neutral-400 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 transition w-full"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -88,22 +95,23 @@ function Home() {
             type="text"
             name="room"
             id="room"
-            placeholder="Room ID"
-            className="bg-transparent rounded-md border border-newutral-900 p-2 text-neutral-300 w-1/2"
+            placeholder="Enter Room ID"
+            className="bg-neutral-700 border border-neutral-600 text-neutral-200 placeholder-neutral-400 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 transition w-full"
             required
             value={room}
             onChange={(e) => setRoom(e.target.value)}
           />
-
           <button
+            type="button"
             onClick={handleJoinRoom}
-            className="btn bg-amber-100 p-2 rounded-xl w-1/2 font-semibold border border-amber-400"
+            className="bg-transparent border border-amber-400 text-amber-400 hover:bg-amber-100 hover:text-neutral-900 font-semibold py-2 rounded-md transition w-full"
           >
             Join Room
           </button>
         </form>
       </div>
     </div>
+
   );
 }
 
