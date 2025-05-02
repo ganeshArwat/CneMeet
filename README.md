@@ -71,8 +71,11 @@ npm run dev
 
 1. Visit the application in your browser.
 2. Allow camera/microphone permissions.
-3. Share the unique meeting link with your peer.
-4. Start a video/audio call with optional chat and screen sharing.
+3. Enter your name and create a room.
+4. Share the unique meeting Id with your peer.
+5. Visit the application in your peer's browser.
+6. Enter your peer's name, enter the meeting Id and join the room.
+7. It will start a video/audio call with optional chat and screen sharing.
 
 ---
 
@@ -94,9 +97,8 @@ npm run dev
 
 ---
 
-### 🎥 Demo Video
-
+<!-- ### 🎥 Demo Video
 
 [Watch Demo](https://youtu.be/demo-video-placeholder)
 
----
+--- -->
