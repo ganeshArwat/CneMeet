@@ -97,9 +97,8 @@ npm run dev
 
 ---
 
-<!-- Comming Soon -->
-<!-- ### 🎥 Demo Video
+### 🎥 Demo Video
 
-[Watch Demo](https://youtu.be/demo-video-placeholder)
+[Watch Demo](https://drive.google.com/file/d/1sFGzivC8afP_dOGmapk4-8iJyrkNlRVJ/view?usp=sharing)
 
---- -->
+---
