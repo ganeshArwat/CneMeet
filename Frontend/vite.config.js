@@ -16,7 +16,7 @@ export default defineConfig({
     global: "globalThis", // Fix for "global is not defined"
   },
   optimizeDeps: {
-    include: ["buffer", "process", "simple-peer"],
+    include: ["buffer", "process", "simple-peer", "agora-rtc-sdk-ng"],
   },
   build: {
     rollupOptions: {

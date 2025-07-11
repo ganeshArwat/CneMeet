@@ -1,26 +1,16 @@
-import { useState } from "react";
-import { Routes, Route, BrowserRouter } from "react-router-dom";
-import Home from "./pages/Home";
-import Room from "./pages/Room";
-import { SocketProvider } from "./providers/SocketProvider";
-import { Toaster } from "react-hot-toast";
+import React, { useState } from "react";
+import { AgoraProvider } from "./context/AgoraContext";
+import VideoCall from "./components/VideoCall";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [name, setName] = useState("Ganesh"); // Later, ask this in a lobby
 
   return (
-    <>
-      <BrowserRouter>
-        <SocketProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/room/:roomId" element={<Room />} />
-          </Routes>
-        </SocketProvider>
-
-      </BrowserRouter>
-      <Toaster />
-    </>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <AgoraProvider userName={name}>
+        <VideoCall />
+      </AgoraProvider>
+    </div>
   );
 }
 
