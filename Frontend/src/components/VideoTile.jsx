@@ -8,7 +8,6 @@ const VideoTile = ({ user }) => {
   useEffect(() => {
     if (videoRef.current && user.videoTrack) {
       try {
-        user.videoTrack.stop();
         const maybePromise = user.videoTrack.play(videoRef.current);
 
         if (maybePromise instanceof Promise) {
@@ -17,12 +16,13 @@ const VideoTile = ({ user }) => {
           );
         }
       } catch (err) {
-        console.error("Exception in video play:", err);
+        console.error("Exception while trying to play video:", err);
       }
     }
   }, [user.videoTrack]);
 
-  const name = user.uid === "local" ? "You" : userMap[user.uid] || `User ${user.uid}`;
+  const name =
+    user.uid === "local" ? "You" : userMap[user.uid] || `User ${user.uid}`;
 
   return (
     <div className="relative aspect-video bg-black rounded overflow-hidden border border-gray-600">

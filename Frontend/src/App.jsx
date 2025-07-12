@@ -8,7 +8,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Lobby />} />
-        <Route path="/room" element={<VideoRoom />} />
+        <Route path="/room/:roomId" element={<VideoRoom />} />
       </Routes>
     </Router>
   );

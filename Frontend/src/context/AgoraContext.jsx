@@ -1,14 +1,20 @@
 // src/context/AgoraContext.jsx
-import React, { createContext, useContext, useRef, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  useEffect,
+} from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
-import { appId, token, channelName } from "../agora/AgoraConfig";
+import { appId, token } from "../agora/AgoraConfig";
 import { db } from "../firebase";
 import { ref, set, remove, onValue } from "firebase/database";
 
 const AgoraContext = createContext();
 export const useAgora = () => useContext(AgoraContext);
 
-export const AgoraProvider = ({ children, userName }) => {
+export const AgoraProvider = ({ children, userName, roomId }) => {
   const client = useRef(null);
   const localTracks = useRef({ audioTrack: null, videoTrack: null });
   const [users, setUsers] = useState([]);
@@ -17,18 +23,20 @@ export const AgoraProvider = ({ children, userName }) => {
   const [userMap, setUserMap] = useState({}); // uid -> name
 
   useEffect(() => {
+    if (!roomId || !userName) return;
+
     const init = async () => {
       client.current = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
-      const newUid = await client.current.join(appId, channelName, token || null, null);
+      const newUid = await client.current.join(appId, roomId, token || null, null);
       setUid(newUid);
 
       const [mic, cam] = await AgoraRTC.createMicrophoneAndCameraTracks();
       localTracks.current = { audioTrack: mic, videoTrack: cam };
       await client.current.publish([mic, cam]);
 
-      // 🔁 Save my name to Firebase
-      await set(ref(db, `rooms/${channelName}/users/${newUid}`), userName);
+      // 🔁 Save my name to Firebase (per room)
+      await set(ref(db, `rooms/${roomId}/users/${newUid}`), userName);
 
       setUsers([
         {
@@ -39,13 +47,13 @@ export const AgoraProvider = ({ children, userName }) => {
         },
       ]);
 
-      // 🔁 Listen for names
-      onValue(ref(db, `rooms/${channelName}/users`), (snapshot) => {
+      // 🔁 Listen for names (per room)
+      onValue(ref(db, `rooms/${roomId}/users`), (snapshot) => {
         const data = snapshot.val() || {};
         setUserMap(data); // { uid: name }
       });
 
-      // 🔁 Subscribe to existing users
+      // 🔁 Existing remote users
       client.current.remoteUsers.forEach(async (user) => {
         if (user.hasVideo) await client.current.subscribe(user, "video");
         if (user.hasAudio) await client.current.subscribe(user, "audio");
@@ -58,8 +66,10 @@ export const AgoraProvider = ({ children, userName }) => {
         user.audioTrack?.play();
       });
 
+      // 🔁 New users
       client.current.on("user-published", async (user, mediaType) => {
         await client.current.subscribe(user, mediaType);
+
         setUsers((prev) => {
           const exists = prev.find((u) => u.uid === user.uid);
           if (exists) return prev;
@@ -77,13 +87,12 @@ export const AgoraProvider = ({ children, userName }) => {
         setUsers((prev) => prev.filter((u) => u.uid !== user.uid));
       });
 
-        // Remove on tab close
+      // Clean up on tab close
       const handleTabClose = () => {
-        if (uid) {
-          remove(ref(db, `rooms/${channelName}/users/${uid}`));
+        if (newUid) {
+          remove(ref(db, `rooms/${roomId}/users/${newUid}`));
         }
       };
-
       window.addEventListener("beforeunload", handleTabClose);
 
       setJoined(true);
@@ -98,12 +107,12 @@ export const AgoraProvider = ({ children, userName }) => {
       localTracks.current.videoTrack?.close();
 
       if (uid) {
-        remove(ref(db, `rooms/${channelName}/users/${uid}`));
+        remove(ref(db, `rooms/${roomId}/users/${uid}`));
       }
 
       client.current?.leave();
     };
-  }, []);
+  }, [roomId, userName]);
 
   return (
     <AgoraContext.Provider value={{ client, localTracks, users, userMap, joined }}>

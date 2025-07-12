@@ -1,10 +1,11 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import VideoCall from "../components/VideoCall";
 import { AgoraProvider } from "../context/AgoraContext";
 import ControlBar from "../components/ControlBar";
 
 const VideoRoom = () => {
+  const { roomId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
@@ -14,23 +15,48 @@ const VideoRoom = () => {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [showChat, setShowChat] = useState(true);
 
+  useEffect(() => {
+    if (!roomId || !name) {
+      navigate("/"); // redirect to lobby if info is missing
+    }
+  }, [roomId, name, navigate]);
+
   const handleMic = () => setIsMuted((prev) => !prev);
   const handleCamera = () => setIsVideoOff((prev) => !prev);
   const handleScreenShare = () => alert("Screen sharing coming soon...");
 
   return (
-    <AgoraProvider userName={name}>
+    <AgoraProvider userName={name} roomId={roomId}>
       <div className="min-h-screen w-screen bg-neutral-900 text-white flex flex-col font-sans">
         {/* Header */}
         <header className="flex justify-between items-center px-6 py-4 bg-neutral-800 border-b border-neutral-600 shadow-lg">
+          {/* Logo and Title */}
           <div className="flex items-center gap-4">
             <img src="/logo.png" alt="CneMeet Logo" className="w-10 h-10 rounded-md" />
-            <h1 className="text-2xl font-bold tracking-wide text-amber-400">
-              Cne Meet
-            </h1>
+            <h1 className="text-2xl font-bold tracking-wide text-amber-400">Cne Meet</h1>
           </div>
+
+          {/* Room Info and Leave */}
           <div className="flex items-center gap-4">
+            {/* 👋 User Greeting */}
             <span className="text-sm text-neutral-300">👋 Hi, {name}</span>
+
+            {/* 📎 Room ID with Copy */}
+            <div className="flex items-center gap-2 bg-neutral-700 px-3 py-1 rounded-md">
+              <span className="text-xs text-amber-300">Room ID:</span>
+              <span className="text-xs text-white font-mono">{roomId}</span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(roomId);
+                }}
+                title="Copy Room ID"
+                className="text-xs bg-amber-400 hover:bg-amber-500 text-neutral-900 px-2 py-1 rounded transition"
+              >
+                Copy
+              </button>
+            </div>
+
+            {/* Leave Button */}
             <button
               onClick={() => navigate("/")}
               className="bg-red-600 hover:bg-red-700 transition px-4 py-2 rounded-md text-sm font-medium"
@@ -39,6 +65,7 @@ const VideoRoom = () => {
             </button>
           </div>
         </header>
+
 
         {/* Main Area */}
         <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
