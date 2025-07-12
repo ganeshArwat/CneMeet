@@ -39,14 +39,6 @@ const ControlBar = ({
         {isVideoOff ? <FaVideoSlash /> : <FaVideo />}
       </button>
 
-      {/* Screen Share */}
-      <button
-        onClick={onToggleScreen}
-        className="text-xl p-3 rounded-full bg-stone-600 text-white hover:scale-105 transition"
-      >
-        <FaDesktop />
-      </button>
-
       {/* Chat */}
       <button
         onClick={onToggleChat}
