@@ -14,6 +14,8 @@ import { ref, set, remove, onValue } from "firebase/database";
 const AgoraContext = createContext();
 export const useAgora = () => useContext(AgoraContext);
 
+
+
 export const AgoraProvider = ({ children, userName, roomId }) => {
   const client = useRef(null);
   const localTracks = useRef({ audioTrack: null, videoTrack: null });
@@ -21,6 +23,19 @@ export const AgoraProvider = ({ children, userName, roomId }) => {
   const [joined, setJoined] = useState(false);
   const [uid, setUid] = useState(null);
   const [userMap, setUserMap] = useState({}); // uid -> name
+
+  const leaveRoom = async () => {
+    if (uid && roomId) {
+      await remove(ref(db, `rooms/${roomId}/users/${uid}`));
+    }
+
+    localTracks.current.audioTrack?.stop();
+    localTracks.current.audioTrack?.close();
+    localTracks.current.videoTrack?.stop();
+    localTracks.current.videoTrack?.close();
+
+    await client.current?.leave();
+  };
 
   useEffect(() => {
     if (!roomId || !userName) return;
@@ -115,7 +130,7 @@ export const AgoraProvider = ({ children, userName, roomId }) => {
   }, [roomId, userName]);
 
   return (
-    <AgoraContext.Provider value={{ client, localTracks, users, userMap, joined }}>
+    <AgoraContext.Provider value={{ client, localTracks, users, userMap, joined, leaveRoom }}>
       {children}
     </AgoraContext.Provider>
   );
