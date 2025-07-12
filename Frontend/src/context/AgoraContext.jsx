@@ -85,18 +85,40 @@ export const AgoraProvider = ({ children, userName, roomId }) => {
       client.current.on("user-published", async (user, mediaType) => {
         await client.current.subscribe(user, mediaType);
 
-        setUsers((prev) => {
-          const exists = prev.find((u) => u.uid === user.uid);
-          if (exists) return prev;
-          return [...prev, user];
+        setUsers((prevUsers) => {
+          const existing = prevUsers.find((u) => u.uid === user.uid);
+          if (existing) {
+            return prevUsers.map((u) =>
+              u.uid === user.uid
+                ? {
+                    ...u,
+                    videoTrack: mediaType === "video" ? user.videoTrack : u.videoTrack,
+                    audioTrack: mediaType === "audio" ? user.audioTrack : u.audioTrack,
+                  }
+                : u
+            );
+          } else {
+            return [...prevUsers, user];
+          }
         });
 
         if (mediaType === "audio") user.audioTrack?.play();
       });
 
-      client.current.on("user-unpublished", (user) => {
-        setUsers((prev) => prev.filter((u) => u.uid !== user.uid));
+      client.current.on("user-unpublished", (user, mediaType) => {
+        setUsers((prevUsers) =>
+          prevUsers.map((u) =>
+            u.uid === user.uid
+              ? {
+                  ...u,
+                  videoTrack: mediaType === "video" ? null : u.videoTrack,
+                  audioTrack: mediaType === "audio" ? null : u.audioTrack,
+                }
+              : u
+          )
+        );
       });
+
 
       client.current.on("user-left", (user) => {
         setUsers((prev) => prev.filter((u) => u.uid !== user.uid));
