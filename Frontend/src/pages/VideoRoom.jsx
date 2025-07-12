@@ -4,6 +4,8 @@ import VideoCall from "../components/VideoCall";
 import { AgoraProvider } from "../context/AgoraContext";
 import { useAgora } from "../context/AgoraContext";
 import ControlBar from "../components/ControlBar";
+import toast from "react-hot-toast";
+
 
 const VideoRoom = () => {
   const { roomId } = useParams();
@@ -59,6 +61,8 @@ const VideoRoomContent = ({
   navigate,
 }) => {
   const { leaveRoom, localTracks } = useAgora();
+  const host = import.meta.env.VITE_HOST;
+
 
   const handleLeave = async () => {
     await leaveRoom();
@@ -72,6 +76,14 @@ const VideoRoomContent = ({
       localTracks.current.audioTrack.setEnabled(!newMuted); // ← mute/unmute mic
     }
   };
+
+  const handleCopy = () => {
+    if (roomId) {
+      const joinUrl = host + "?roomId=" + roomId;
+      navigator.clipboard.writeText(joinUrl);
+      toast.success("Invite link copied!");
+    }
+  }
   const handleCamera = () =>{
     if (localTracks.current.videoTrack) {
     const newVideoOff = !isVideoOff;
@@ -105,7 +117,7 @@ const VideoRoomContent = ({
               <span className="text-[10px] text-amber-300 sm:text-xs">Room ID:</span>
               <span className="font-mono text-[10px] text-white sm:text-xs">{roomId}</span>
               <button
-                onClick={() => navigator.clipboard.writeText(roomId)}
+                onClick={handleCopy}
                 title="Copy Room ID"
                 className="rounded bg-amber-400 px-2 py-1 text-[10px] text-neutral-900 transition hover:bg-amber-500 sm:text-xs"
               >
