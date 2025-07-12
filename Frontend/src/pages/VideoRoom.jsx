@@ -27,9 +27,6 @@ const VideoRoom = () => {
     }
   }, [roomId, name, navigate]);
 
-  const handleMic = () => setIsMuted((prev) => !prev);
-  const handleCamera = () => setIsVideoOff((prev) => !prev);
-  const handleScreenShare = () => alert("Screen sharing coming soon...");
 
   return (
     <AgoraProvider userName={name} roomId={roomId}>
@@ -61,15 +58,27 @@ const VideoRoomContent = ({
   setShowChat,
   navigate,
 }) => {
-  const { leaveRoom } = useAgora();
+  const { leaveRoom, localTracks } = useAgora();
 
   const handleLeave = async () => {
     await leaveRoom();
     navigate("/");
   };
 
-  const handleMic = () => setIsMuted((prev) => !prev);
-  const handleCamera = () => setIsVideoOff((prev) => !prev);
+  const handleMic = () => {
+    if (localTracks.current.audioTrack) {
+      const newMuted = !isMuted;
+      setIsMuted(newMuted);
+      localTracks.current.audioTrack.setEnabled(!newMuted); // ← mute/unmute mic
+    }
+  };
+  const handleCamera = () =>{
+    if (localTracks.current.videoTrack) {
+    const newVideoOff = !isVideoOff;
+    setIsVideoOff(newVideoOff);
+    localTracks.current.videoTrack.setEnabled(!newVideoOff); // ← turn on/off cam
+  } 
+}
   const handleScreenShare = () => alert("Screen sharing coming soon...");
 
   return (
