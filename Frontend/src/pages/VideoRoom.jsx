@@ -82,45 +82,40 @@ const VideoRoomContent = ({
   const handleScreenShare = () => alert("Screen sharing coming soon...");
 
   return (
-          <div className="flex min-h-screen w-screen flex-col bg-neutral-900 font-sans text-white">
+      <div className="flex min-h-screen w-screen flex-col bg-neutral-900 font-sans text-white">
         {/* Header */}
-        <header className="flex items-center justify-between border-b border-neutral-600 bg-neutral-800 px-6 py-4 shadow-lg">
+        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-600 bg-neutral-800 px-4 py-3 shadow-lg sm:px-6 sm:py-4">
           {/* Logo and Title */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <img
               src="/logo.png"
               alt="CneMeet Logo"
-              className="h-10 w-10 rounded-md"
+              className="h-9 w-9 rounded-md sm:h-10 sm:w-10"
             />
-            <h1 className="text-2xl font-bold tracking-wide text-amber-400">
+            <h1 className="text-xl font-bold tracking-wide text-amber-400 sm:text-2xl">
               Cne Meet
             </h1>
           </div>
 
           {/* Room Info and Leave */}
-          <div className="flex items-center gap-4">
-            {/* 👋 User Greeting */}
-            <span className="text-sm text-neutral-300">👋 Hi, {name}</span>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <span className="text-xs text-neutral-300 sm:text-sm">👋 Hi, {name}</span>
 
-            {/* 📎 Room ID with Copy */}
-            <div className="flex items-center gap-2 rounded-md bg-neutral-700 px-3 py-1">
-              <span className="text-xs text-amber-300">Room ID:</span>
-              <span className="font-mono text-xs text-white">{roomId}</span>
+            <div className="flex items-center gap-2 rounded-md bg-neutral-700 px-2 py-1 sm:px-3">
+              <span className="text-[10px] text-amber-300 sm:text-xs">Room ID:</span>
+              <span className="font-mono text-[10px] text-white sm:text-xs">{roomId}</span>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(roomId);
-                }}
+                onClick={() => navigator.clipboard.writeText(roomId)}
                 title="Copy Room ID"
-                className="rounded bg-amber-400 px-2 py-1 text-xs text-neutral-900 transition hover:bg-amber-500"
+                className="rounded bg-amber-400 px-2 py-1 text-[10px] text-neutral-900 transition hover:bg-amber-500 sm:text-xs"
               >
                 Copy
               </button>
             </div>
 
-            {/* Leave Button */}
             <button
               onClick={handleLeave}
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium transition hover:bg-red-700"
+              className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium transition hover:bg-red-700 sm:px-4 sm:py-2 sm:text-sm"
             >
               Leave
             </button>
@@ -128,20 +123,19 @@ const VideoRoomContent = ({
         </header>
 
         {/* Main Area */}
-        <main className="flex flex-1 flex-col overflow-hidden md:flex-row">
+        <main className="flex flex-1 flex-col overflow-hidden sm:flex-row">
           {/* Video Grid */}
-          <section className="flex-1 overflow-y-auto bg-neutral-900 p-4">
+          <section className="flex-1 overflow-y-auto p-3 sm:p-4">
             <VideoCall />
           </section>
 
           {/* Chat Panel */}
           {showChat && (
-            <aside className="flex w-full flex-col justify-between border-l border-neutral-800 bg-neutral-800 p-4 md:w-80">
+            <aside className="flex w-full flex-col justify-between border-t border-neutral-800 bg-neutral-800 p-3 sm:w-80 sm:border-l sm:border-t-0 sm:p-4">
               <div>
-                <h2 className="mb-3 border-b border-neutral-700 pb-2 text-lg font-semibold text-amber-400">
+                <h2 className="mb-3 border-b border-neutral-700 pb-2 text-base font-semibold text-amber-400 sm:text-lg">
                   Chat Room
                 </h2>
-                {/* Message list here */}
                 <div className="text-sm text-neutral-400">Coming soon...</div>
               </div>
 
@@ -161,15 +155,18 @@ const VideoRoomContent = ({
         </main>
 
         {/* Bottom Controls */}
-        <ControlBar
-          isMuted={isMuted}
-          isVideoOff={isVideoOff}
-          onToggleMic={handleMic}
-          onToggleVideo={handleCamera}
-          onToggleScreen={handleScreenShare}
-          onToggleChat={() => setShowChat((prev) => !prev)}
-        />
+        <div className="sticky bottom-0 z-10 w-full bg-neutral-900 shadow-inner">
+          <ControlBar
+            isMuted={isMuted}
+            isVideoOff={isVideoOff}
+            onToggleMic={handleMic}
+            onToggleVideo={handleCamera}
+            onToggleScreen={handleScreenShare}
+            onToggleChat={() => setShowChat((prev) => !prev)}
+          />
+        </div>
       </div>
+
   );
 };
 
