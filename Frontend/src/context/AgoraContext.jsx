@@ -1,4 +1,3 @@
-// src/context/AgoraContext.jsx
 import React, {
   createContext,
   useContext,
@@ -9,12 +8,10 @@ import React, {
 import AgoraRTC from "agora-rtc-sdk-ng";
 import { appId, token } from "../agora/AgoraConfig";
 import { db } from "../firebase";
-import { ref, set, remove, onValue } from "firebase/database";
+import { ref, set, remove, onValue, get } from "firebase/database";
 
 const AgoraContext = createContext();
 export const useAgora = () => useContext(AgoraContext);
-
-
 
 export const AgoraProvider = ({ children, userName, roomId }) => {
   const client = useRef(null);
@@ -26,7 +23,15 @@ export const AgoraProvider = ({ children, userName, roomId }) => {
 
   const leaveRoom = async () => {
     if (uid && roomId) {
-      await remove(ref(db, `rooms/${roomId}/users/${uid}`));
+      const userRef = ref(db, `rooms/${roomId}/users/${uid}`);
+      await remove(userRef);
+
+      // 🔥 If last user, remove chatMessages
+      const usersRef = ref(db, `rooms/${roomId}/users`);
+      const snapshot = await get(usersRef);
+      if (!snapshot.exists() || Object.keys(snapshot.val() || {}).length === 0) {
+        await remove(ref(db, `rooms/${roomId}/chatMessages`));
+      }
     }
 
     localTracks.current.audioTrack?.stop();
@@ -50,7 +55,6 @@ export const AgoraProvider = ({ children, userName, roomId }) => {
       localTracks.current = { audioTrack: mic, videoTrack: cam };
       await client.current.publish([mic, cam]);
 
-      // 🔁 Save my name to Firebase (per room)
       await set(ref(db, `rooms/${roomId}/users/${newUid}`), userName);
 
       setUsers([
@@ -62,13 +66,11 @@ export const AgoraProvider = ({ children, userName, roomId }) => {
         },
       ]);
 
-      // 🔁 Listen for names (per room)
       onValue(ref(db, `rooms/${roomId}/users`), (snapshot) => {
         const data = snapshot.val() || {};
-        setUserMap(data); // { uid: name }
+        setUserMap(data);
       });
 
-      // 🔁 Existing remote users
       client.current.remoteUsers.forEach(async (user) => {
         if (user.hasVideo) await client.current.subscribe(user, "video");
         if (user.hasAudio) await client.current.subscribe(user, "audio");
@@ -81,7 +83,6 @@ export const AgoraProvider = ({ children, userName, roomId }) => {
         user.audioTrack?.play();
       });
 
-      // 🔁 New users
       client.current.on("user-published", async (user, mediaType) => {
         await client.current.subscribe(user, mediaType);
 
@@ -119,33 +120,41 @@ export const AgoraProvider = ({ children, userName, roomId }) => {
         );
       });
 
-
       client.current.on("user-left", (user) => {
         setUsers((prev) => prev.filter((u) => u.uid !== user.uid));
       });
 
-      // Clean up on tab close
-      const handleTabClose = () => {
-        if (newUid) {
-          remove(ref(db, `rooms/${roomId}/users/${newUid}`));
+      // ✅ Clean up on tab close or refresh
+      const handleTabClose = async () => {
+        if (newUid && roomId) {
+          await remove(ref(db, `rooms/${roomId}/users/${newUid}`));
+
+          const usersRef = ref(db, `rooms/${roomId}/users`);
+          const snapshot = await get(usersRef);
+          if (!snapshot.exists() || Object.keys(snapshot.val() || {}).length === 0) {
+            await remove(ref(db, `rooms/${roomId}/chatMessages`));
+          }
         }
       };
+
       window.addEventListener("beforeunload", handleTabClose);
+
+      // Optional: remove listener on unmount
+      return () => {
+        window.removeEventListener("beforeunload", handleTabClose);
+      };
 
       setJoined(true);
     };
 
     init();
 
+    // ❌ Removed duplicated leave logic here
     return () => {
       localTracks.current.audioTrack?.stop();
       localTracks.current.audioTrack?.close();
       localTracks.current.videoTrack?.stop();
       localTracks.current.videoTrack?.close();
-
-      if (uid) {
-        remove(ref(db, `rooms/${roomId}/users/${uid}`));
-      }
 
       client.current?.leave();
     };
